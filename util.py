@@ -178,32 +178,38 @@ class PriorityQueue:
         self.heap = []
         self.count = 0
 
-    def push(self, item, priority):
-        entry = (priority, self.count, item)
+    def push(self, item, priority, second_priority = 0):
+        entry = (priority, second_priority, self.count, item)
         heapq.heappush(self.heap, entry)
         self.count += 1
 
     def pop(self):
-        (_, _, item) = heapq.heappop(self.heap)
+        (_, _, _, item) = heapq.heappop(self.heap)
         return item
 
     def isEmpty(self):
         return len(self.heap) == 0
+    
+    def has(self, item):
+        for index, (p, p2, c, i) in enumerate(self.heap):
+            if i == item:
+                return True
+        return False
 
-    def update(self, item, priority):
+    def update(self, item, priority, second_priority = 0):
         # If item already in priority queue with higher priority, update its priority and rebuild the heap.
         # If item already in priority queue with equal or lower priority, do nothing.
         # If item not in priority queue, do the same thing as self.push.
-        for index, (p, c, i) in enumerate(self.heap):
+        for index, (p, p2, c, i) in enumerate(self.heap):
             if i == item:
                 if p <= priority:
                     break
                 del self.heap[index]
-                self.heap.append((priority, c, item))
+                self.heap.append((priority, second_priority, c, item))
                 heapq.heapify(self.heap)
                 break
         else:
-            self.push(item, priority)
+            self.push(item, priority, second_priority)
 
 class PriorityQueueWithFunction(PriorityQueue):
     """

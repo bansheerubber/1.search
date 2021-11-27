@@ -81,6 +81,7 @@ class SearchAgent(Agent):
             raise AttributeError(fn + ' is not a search function in search.py.')
         func = getattr(search, fn)
         if 'heuristic' not in func.__code__.co_varnames:
+            print("-------------------------------------")
             print('[SearchAgent] using function ' + fn)
             self.searchFunction = func
         else:
@@ -90,6 +91,7 @@ class SearchAgent(Agent):
                 heur = getattr(search, heuristic)
             else:
                 raise AttributeError(heuristic + ' is not a function in searchAgents.py or search.py.')
+            print("-------------------------------------")
             print('[SearchAgent] using function %s and heuristic %s' % (fn, heuristic))
             # Note: this bit of Python trickery combines the search algorithm and the heuristic
             self.searchFunction = lambda x: func(x, heuristic=heur)
@@ -98,7 +100,7 @@ class SearchAgent(Agent):
         if prob not in globals().keys() or not prob.endswith('Problem'):
             raise AttributeError(prob + ' is not a search problem type in SearchAgents.py.')
         self.searchType = globals()[prob]
-        print('[SearchAgent] using problem type ' + prob)
+        # print('[SearchAgent] using problem type ' + prob)
 
     def registerInitialState(self, state):
         """
@@ -158,8 +160,8 @@ class PositionSearchProblem(search.SearchProblem):
         self.goal = goal
         self.costFn = costFn
         self.visualize = visualize
-        if warn and (gameState.getNumFood() != 1 or not gameState.hasFood(*goal)):
-            print('Warning: this does not look like a regular search maze')
+        # if warn and (gameState.getNumFood() != 1 or not gameState.hasFood(*goal)):
+        #     print('Warning: this does not look like a regular search maze')
 
         # For display purposes
         self._visited, self._visitedlist, self._expanded = {}, [], 0 # DO NOT CHANGE
@@ -180,7 +182,7 @@ class PositionSearchProblem(search.SearchProblem):
 
         return isGoal
 
-    def getSuccessors(self, state):
+    def getSuccessors(self, state, no_add = False):
         """
         Returns successor states, the actions they require, and a cost of 1.
 
@@ -206,7 +208,8 @@ class PositionSearchProblem(search.SearchProblem):
         self._expanded += 1 # DO NOT CHANGE
         if state not in self._visited:
             self._visited[state] = True
-            self._visitedlist.append(state)
+            if not no_add:
+                self._visitedlist.append(state)
 
         return successors
 
@@ -250,16 +253,20 @@ class StayWestSearchAgent(SearchAgent):
         costFn = lambda pos: 2 ** pos[0]
         self.searchType = lambda state: PositionSearchProblem(state, costFn)
 
-def manhattanHeuristic(position, problem, info={}):
+def manhattanHeuristic(position, problem, goal=None, info={}):
     "The Manhattan distance heuristic for a PositionSearchProblem"
     xy1 = position
-    xy2 = problem.goal
+    xy2 = goal
+    if xy2 == None:
+        xy2 = problem.goal
     return abs(xy1[0] - xy2[0]) + abs(xy1[1] - xy2[1])
 
-def euclideanHeuristic(position, problem, info={}):
+def euclideanHeuristic(position, problem, goal=None, info={}):
     "The Euclidean distance heuristic for a PositionSearchProblem"
     xy1 = position
-    xy2 = problem.goal
+    xy2 = goal
+    if xy2 == None:
+        xy2 = problem.goal
     return ( (xy1[0] - xy2[0]) ** 2 + (xy1[1] - xy2[1]) ** 2 ) ** 0.5
 
 #####################################################
@@ -346,7 +353,7 @@ class CornersProblem(search.SearchProblem):
         return len(actions)
 
 
-def cornersHeuristic(state, problem):
+def cornersHeuristic(state, problem, goal):
     """
     A heuristic for the CornersProblem that you defined.
 

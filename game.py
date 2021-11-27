@@ -564,7 +564,7 @@ class Game:
         sys.stderr = OLD_STDERR
 
 
-    def run( self ):
+    def run( self, quit=False):
         """
         Main control loop for game play.
         """
@@ -610,6 +610,9 @@ class Game:
 
         agentIndex = self.startingIndex
         numAgents = len( self.agents )
+
+        if quit:
+            return
 
         while not self.gameOver:
             # Fetch the next agent
