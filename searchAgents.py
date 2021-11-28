@@ -37,6 +37,7 @@ Good luck and happy searching!
 from game import Directions
 from game import Agent
 from game import Actions
+from util import manhattanDistance
 import util
 import time
 import search
@@ -182,7 +183,7 @@ class PositionSearchProblem(search.SearchProblem):
 
         return isGoal
 
-    def getSuccessors(self, state, no_add = False):
+    def getSuccessors(self, state, reverse=False):
         """
         Returns successor states, the actions they require, and a cost of 1.
 
@@ -208,8 +209,7 @@ class PositionSearchProblem(search.SearchProblem):
         self._expanded += 1 # DO NOT CHANGE
         if state not in self._visited:
             self._visited[state] = True
-            if not no_add:
-                self._visitedlist.append(state)
+            self._visitedlist.append(state)
 
         return successors
 
@@ -293,8 +293,8 @@ class CornersProblem(search.SearchProblem):
                 print('Warning: no food in corner ' + str(corner))
         self._expanded = 0 # DO NOT CHANGE; Number of search nodes expanded
         self.costFn = lambda x: 1
-        self.goal = ((1, 1), (1, 1, 1, 1))
-        self.startState = (startingGameState.getPacmanPosition(), (0, 0, 0, 0))
+        self.goal = ((1, 1), (True, True, True, True))
+        self.startState = (startingGameState.getPacmanPosition(), (False, False, False, False))
 
     def getStartState(self):
         return self.startState
@@ -303,7 +303,7 @@ class CornersProblem(search.SearchProblem):
         isGoal = state[1] == self.goal[1]
         return isGoal
 
-    def getSuccessors(self, state):
+    def getSuccessors(self, state, reverse=False):
         """
         Returns successor states, the actions they require, and a cost of 1.
 
@@ -326,10 +326,16 @@ class CornersProblem(search.SearchProblem):
                 next_coords = (nextx, nexty)
                 
                 new_visited = visited
-                if next_coords in self.corners:
-                    new_visited = list(new_visited)
-                    new_visited[self.corners.index(next_coords)] = 1
-                    new_visited = tuple(new_visited)
+                if reverse:
+                    if coords in self.corners and next_coords not in self.corners:
+                        new_visited = list(new_visited)
+                        new_visited[self.corners.index(coords)] = False
+                        new_visited = tuple(new_visited)
+                else:
+                    if next_coords in self.corners:
+                        new_visited = list(new_visited)
+                        new_visited[self.corners.index(next_coords)] = True
+                        new_visited = tuple(new_visited)
 
                 cost = self.costFn(next_coords)
                 successors.append(((next_coords, new_visited), action, cost))
@@ -353,7 +359,7 @@ class CornersProblem(search.SearchProblem):
         return len(actions)
 
 
-def cornersHeuristic(state, problem, goal):
+def cornersHeuristic(state, problem, goal, reverse=False):
     """
     A heuristic for the CornersProblem that you defined.
 
@@ -382,8 +388,9 @@ def cornersHeuristic(state, problem, goal):
 
     closest_distance = None
     for distance, corner_coords, has_visited in combined_sorted:
-        if has_visited == 0:
+        if has_visited == (not reverse):
             closest_distance = distance
+            break
 
     if closest_distance == None:
         return 0
@@ -395,6 +402,12 @@ class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
     def __init__(self):
         self.searchFunction = lambda prob: search.aStarSearch(prob, cornersHeuristic)
+        self.searchType = CornersProblem
+
+class BiDirectionalCornersAgent(SearchAgent):
+    "A SearchAgent for FoodSearchProblem using Bi-directional search and your foodHeuristic"
+    def __init__(self):
+        self.searchFunction = lambda prob: search.biDirectionalSearch(prob, cornersHeuristic)
         self.searchType = CornersProblem
 
 class FoodSearchProblem:
@@ -419,7 +432,7 @@ class FoodSearchProblem:
     def isGoalState(self, state):
         return state[1].count() == 0
 
-    def getSuccessors(self, state):
+    def getSuccessors(self, state, reverse=False):
         "Returns successor states, the actions they require, and a cost of 1."
         successors = []
         self._expanded += 1 # DO NOT CHANGE

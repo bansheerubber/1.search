@@ -188,7 +188,7 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     came_from = {}
     fringe = util.PriorityQueue()
     start = problem.getStartState()
-    fringe.push((start, None, None), heuristic(start, problem))
+    fringe.push((start, None, None), heuristic(start, problem, None))
 
     remembered_cost = {}
     remembered_cost[start] = 0
@@ -220,7 +220,7 @@ def aStarSearch(problem, heuristic=nullHeuristic):
                 if successor not in closed:
                     fringe.update(
                         (successor, successor_direction, successor_cost),
-                        g_cost + heuristic(successor, problem) # only difference between A* and UCS
+                        g_cost + heuristic(successor, problem, None) # only difference between A* and UCS
                     )
 
 def pr(f_score, g_score):
@@ -256,11 +256,11 @@ class CostMap:
     def get_min(self):
         return (self.heap[0][0], self.heap[0][2])
 
-def biDirectionalRound(problem, heuristic, goal, a_open, a_closed, b_open, b_closed, a_g, b_g, a_f, a_came_from, last_node, cheapest_solution):
+def biDirectionalRound(problem, heuristic, goal, a_open, a_closed, b_open, b_closed, a_g, b_g, a_f, a_came_from, last_node, cheapest_solution, reverse):
     n = a_open.pop()
     a_closed.append(n)
 
-    successors = problem.getSuccessors(n)
+    successors = problem.getSuccessors(n, reverse)
     for c, successor_direction, successor_cost in successors:
         if (a_open.has(c) or c in a_closed) and a_g.has(c) and a_g.get(c) <= a_g.get(n) + successor_cost:
             continue
@@ -271,7 +271,7 @@ def biDirectionalRound(problem, heuristic, goal, a_open, a_closed, b_open, b_clo
         a_came_from[c] = (n, successor_direction, successor_cost)
 
         a_g.update(c, a_g.get(n) + successor_cost)
-        a_f.update(c, a_g.get(c) + heuristic(c, problem, goal))
+        a_f.update(c, a_g.get(c) + heuristic(c, problem, goal, reverse))
         a_open.update(
             c,
             pr(a_f.get(c), a_g.get(c)),
@@ -304,7 +304,7 @@ def biDirectionalSearch(problem, heuristic=nullHeuristic):
     g_cost_backwards.update(goal, 0)
 
     f_cost_forwards.update(start, heuristic(start, problem, goal))
-    f_cost_backwards.update(goal, heuristic(goal, problem, start))
+    f_cost_backwards.update(goal, heuristic(goal, problem, start, True))
 
     open_forwards.push(start, 0, g_cost_forwards.get(start))
     open_backwards.push(goal, 0, g_cost_backwards.get(goal))
@@ -357,7 +357,8 @@ def biDirectionalSearch(problem, heuristic=nullHeuristic):
                 f_cost_forwards,
                 came_from_forwards,
                 last_node,
-                cheapest_solution
+                cheapest_solution,
+                False
             )
         elif chosen_round == min_backwards[0]:
             last_node, cheapest_solution = biDirectionalRound(
@@ -373,7 +374,8 @@ def biDirectionalSearch(problem, heuristic=nullHeuristic):
                 f_cost_backwards,
                 came_from_backwards,
                 last_node,
-                cheapest_solution
+                cheapest_solution,
+                True
             )
 
     return []
