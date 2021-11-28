@@ -5,8 +5,9 @@ def read(filename):
 	file = open(filename)
 	result = []
 	for line in file:
+		split = line.split(",")
 		try:
-			result.append(int(line))
+			result.append(int(split[1]))
 		except:
 			pass
 	plt.hist(result, bins="auto")
