@@ -7,7 +7,7 @@ def read(filename):
 	for line in file:
 		split = line.split(",")
 		try:
-			result.append(int(split[1]))
+			result.append(int(split[0]))
 		except:
 			pass
 	plt.hist(result, bins="auto")
